@@ -2,7 +2,18 @@
 
 Full-featured language support for AILang — the self-hosting, explicit-syntax systems programming language.
 
-**Publisher:** 2Paws · **Version:** 1.2.2 · **Requires:** VS Code 1.75+
+**Publisher:** 2Paws · **Version:** 1.3.0 · **Requires:** VS Code 1.75+
+
+---
+
+## What's new in 1.3.0
+
+- **Width-explicit memory access.** `GetByte`, `SetByte`, `Dereference`, and `StoreValue` are replaced by `RDMEM_8/16/32/64`, the sign-extending `RDMEM_S8/S16/S32`, and `WRMEM_8/16/32/64`. Each takes `(addr)` or `(base, offset)`; writes add the value. `RDMEM_IO_`/`WRMEM_IO_` access device memory exactly once, in program order. Highlighting, completion, and the bundled toolchain all know the new names. Shorthand `GB`, `SB`, and `DEREF` now expand to `RDMEM_8`, `WRMEM_8`, and `RDMEM_64`; `WM` expands to `WRMEM_64`.
+- **Bundled compiler, analyzer, and LSP rebuilt** from the migrated source, including two optimizer fixes: a byte read at a computed address could read the wrong byte, and a pointer used only through `ptr@field` after a compare could lose its value.
+- **Memory Access Guide** in the manuals replaces the Dereference & StoreValue guide.
+- **Connectome** draws calls between files and loads its page from `connectome.html`.
+
+Convert older source with `python3 -I tools/memprim_migrate.py --write --split-add PATH...` from the AILang repository.
 
 ---
 

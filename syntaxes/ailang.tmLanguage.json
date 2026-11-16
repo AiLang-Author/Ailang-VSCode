@@ -48,8 +48,13 @@
 			"name": "support.function.math.ailang"
 		},
 		{
+			"comment": "Width-explicit memory access (RDMEM_/WRMEM_, _IO_ for device memory)",
+			"match": "\\b(RDMEM_(IO_)?(S8|S16|S32|8|16|32|64)|WRMEM_(IO_)?(8|16|32|64))\\b",
+			"name": "support.function.system.ailang"
+		},
+		{
 			"comment": "System, Memory, and IO Built-ins",
-			"match": "\\b(Allocate|Deallocate|GetByte|SetByte|MemoryCopy|MemorySet|PrintMessage|PrintNumber|PrintString|PrintChar|SystemCall|StoreValue|Dereference|AddressOf|SizeOf|MemoryCompare|PortRead|PortWrite|HardwareRegister|MMIORead|MMIOWrite|AtomicRead|AtomicWrite|AtomicAdd|AtomicCompareSwap|AllocateLinkage|FreeLinkage|CopyLinkage|CopyLinkageInto|ResetLinkage|CompareLinkage|PoolSize|PoolFieldCount|PoolFieldOffset)\\b",
+			"match": "\\b(Allocate|Deallocate|MemoryCopy|MemorySet|PrintMessage|PrintNumber|PrintString|PrintChar|SystemCall|AddressOf|SizeOf|MemoryCompare|PortRead|PortWrite|HardwareRegister|MMIORead|MMIOWrite|AtomicRead|AtomicWrite|AtomicAdd|AtomicCompareSwap|AllocateLinkage|FreeLinkage|CopyLinkage|CopyLinkageInto|ResetLinkage|CompareLinkage|PoolSize|PoolFieldCount|PoolFieldOffset)\\b",
 			"name": "support.function.system.ailang"
 		},
 		{

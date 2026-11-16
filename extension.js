@@ -45,8 +45,15 @@ const BUILTINS = [
     'BitwiseAnd', 'BitwiseOr', 'BitwiseXor', 'BitwiseNot', 'LeftShift', 'RightShift',
     'PopCount', 'CountLeadingZeros', 'CountTrailingZeros', 'RotateLeft', 'RotateRight',
     // Memory
-    'Allocate', 'Deallocate', 'GetByte', 'SetByte', 'MemoryCopy', 'MemorySet',
-    'MemoryCompare', 'Dereference', 'StoreValue', 'AddressOf', 'SizeOf',
+    'Allocate', 'Deallocate', 'MemoryCopy', 'MemorySet',
+    'MemoryCompare', 'AddressOf', 'SizeOf',
+    // Width-explicit memory access: (addr) or (base, offset); writes add the value
+    'RDMEM_8', 'RDMEM_16', 'RDMEM_32', 'RDMEM_64', 'RDMEM_S8', 'RDMEM_S16', 'RDMEM_S32',
+    'WRMEM_8', 'WRMEM_16', 'WRMEM_32', 'WRMEM_64',
+    // Device memory: one access of that width, in program order, never optimized
+    'RDMEM_IO_8', 'RDMEM_IO_16', 'RDMEM_IO_32', 'RDMEM_IO_64',
+    'RDMEM_IO_S8', 'RDMEM_IO_S16', 'RDMEM_IO_S32',
+    'WRMEM_IO_8', 'WRMEM_IO_16', 'WRMEM_IO_32', 'WRMEM_IO_64',
     // Linkage
     'AllocateLinkage', 'FreeLinkage', 'CopyLinkage', 'CopyLinkageInto',
     'ResetLinkage', 'CompareLinkage', 'PoolSize', 'PoolFieldCount', 'PoolFieldOffset',
@@ -128,11 +135,12 @@ const ALIASES = {
     // Memory
     'ALLOC': 'Allocate',
     'DEALLOC': 'Deallocate',
-    'GB':  'GetByte',
-    'SB':  'SetByte',
+    'GB':  'RDMEM_8',
+    'SB':  'WRMEM_8',
     'MCPY': 'MemoryCopy',
     'MSET': 'MemorySet',
-    'DEREF': 'Dereference',
+    'DEREF': 'RDMEM_64',
+    'WM':  'WRMEM_64',
     'ADDR': 'AddressOf',
     'SZOF': 'SizeOf',
     // I/O
@@ -1537,18 +1545,21 @@ function getConnectomeHTML(data, fileUri) {
                 group,
                 color,
                 line: s.line || 0,
-                scope: s.scope || null
+                scope: s.scope || null,
+                file: s.file || 'main'
             });
         });
 
         if (data.calls) {
-            const nodeIds = new Set(nodes.map(n => n.id));
+            const nodeMap = {};
+            nodes.forEach(n => { nodeMap[n.id] = n; });
             const seen = new Set();
             data.calls.forEach(c => {
                 const key = `${c.from}->${c.to}`;
-                if (!seen.has(key) && nodeIds.has(c.from) && nodeIds.has(c.to)) {
+                if (!seen.has(key) && nodeMap[c.from] && nodeMap[c.to]) {
                     seen.add(key);
-                    edges.push({ from: c.from, to: c.to });
+                    const crossFile = nodeMap[c.from].file !== nodeMap[c.to].file;
+                    edges.push({ from: c.from, to: c.to, crossFile });
                 }
             });
         }
@@ -1575,6 +1586,16 @@ function getConnectomeHTML(data, fileUri) {
 
     const graphData = JSON.stringify({ nodes, edges, imports });
 
+    // Load connectome.html from disk and inject graph data
+    const htmlPath = path.join(__dirname, 'connectome.html');
+    if (fs.existsSync(htmlPath)) {
+        let html = fs.readFileSync(htmlPath, 'utf8');
+        const dataScript = '<script>window.__graphData = ' + graphData + ';<\/script>';
+        html = html.replace('<!--SPLIT-->', '<!--SPLIT-->\n' + dataScript);
+        return html;
+    }
+
+    // Fallback: minimal inline version if connectome.html missing
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
